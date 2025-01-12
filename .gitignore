@@ -47,5 +47,3 @@ yalc.lock
 
 backend/out
 
-# Ignore python symlink
-/python
