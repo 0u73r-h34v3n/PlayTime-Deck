@@ -81,3 +81,11 @@ export function startOfMonth(date: Date): Date {
 export function endOfMonth(date: Date): Date {
 	return moment(date).endOf("month").endOf("day").toDate();
 }
+
+export function startOfYear(date: Date): Date {
+	return moment(date).startOf("isoWeek").startOf("year").toDate();
+}
+
+export function endOfYear(date: Date): Date {
+	return moment(date).startOf("isoWeek").endOf("year").toDate();
+}
