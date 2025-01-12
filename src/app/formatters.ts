@@ -5,6 +5,7 @@ import type { Interval } from "./reports";
 export {
 	formatMonthInterval,
 	formatWeekInterval,
+	formatYearInterval,
 	getDurationInDays,
 	getDurationInHours,
 	humanReadableTime,
@@ -138,5 +139,11 @@ function formatWeekInterval(interval: Interval) {
 	})} - ${interval.end.toLocaleDateString("en-us", {
 		day: "2-digit",
 		month: "long",
+	})}`;
+}
+
+function formatYearInterval(interval: Interval) {
+	return `${interval.start.toLocaleDateString("en-us", {
+		year: "numeric",
 	})}`;
 }
