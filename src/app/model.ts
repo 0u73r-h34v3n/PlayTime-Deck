@@ -172,10 +172,12 @@ interface AppStore {
 	GetIconURLForApp: unknown;
 	GetLandscapeImageURLForApp: unknown;
 	GetCachedLandscapeImageURLForApp: unknown;
-	GetVerticalCapsuleURLForApp: unknown;
+	GetVerticalCapsuleURLForApp: (
+		gameOverview: AppOverview,
+	) => string | undefined;
 	GetPregeneratedVerticalCapsuleForApp: unknown;
 	GetCachedVerticalCapsuleURL: unknown;
-	GetCustomImageURLs: unknown;
+	GetCustomImageURLs: (appOverview: AppOverview) => Array<string>;
 	GetCustomVerticalCapsuleURLs: unknown;
 	GetCustomLandcapeImageURLs: unknown;
 	GetCustomHeroImageURLs: unknown;
