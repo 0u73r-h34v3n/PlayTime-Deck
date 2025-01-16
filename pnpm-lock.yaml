@@ -48,6 +48,9 @@ importers:
       rollup:
         specifier: ^4.30.1
         version: 4.30.1
+      rollup-plugin-import-css:
+        specifier: ^3.5.8
+        version: 3.5.8(rollup@4.30.1)
       shx:
         specifier: ^0.3.4
         version: 0.3.4
@@ -799,6 +802,12 @@ packages:
     resolution: {integrity: sha512-u5zJwOjguTf2N+wETq2weNKGvNkuVc1UX/fPgg215p5xPvGOaI6/BTc024E9brvFjSQTfIYqgvwogQdipknu1g==}
     peerDependencies:
       rollup: '>=1.9.0'
+
+  rollup-plugin-import-css@3.5.8:
+    resolution: {integrity: sha512-a3YsZnwHz66mRHCKHjaPCSfWczczvS/HTkgDc+Eogn0mt/0JZXz0WjK0fzM5WwBpVtOqHB4/gHdmEY40ILsaVg==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      rollup: ^2.x.x || ^3.x.x || ^4.x.x
 
   rollup-pluginutils@2.8.2:
     resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
@@ -1567,6 +1576,11 @@ snapshots:
       rollup: 4.30.1
       rollup-pluginutils: 2.8.2
       url-join: 4.0.1
+
+  rollup-plugin-import-css@3.5.8(rollup@4.30.1):
+    dependencies:
+      '@rollup/pluginutils': 5.1.4(rollup@4.30.1)
+      rollup: 4.30.1
 
   rollup-pluginutils@2.8.2:
     dependencies:
