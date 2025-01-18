@@ -1,13 +1,14 @@
-import { useState, type VFC } from "react";
-import { Tab } from "../components/Tab";
 import { Tabs } from "@decky/ui";
+import { useState } from "react";
 import { PageWrapper } from "../components/PageWrapper";
+import { Tab } from "../components/Tab";
 import { ReportMonthly } from "../containers/ReportMonthly";
-import { ReportWeekly } from "../containers/ReportWeekly";
 import { ReportOverall } from "../containers/ReportOverall";
+import { ReportWeekly } from "../containers/ReportWeekly";
 
-export const DetailedPage: VFC = () => {
+export const DetailedPage = () => {
 	const [currentTabRoute, setCurrentTabRoute] = useState<string>("all-time");
+
 	return (
 		<PageWrapper>
 			<Tabs
