@@ -38,6 +38,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda BOTW",
                             },
                             "time": 3600,
+                            "last_play_duration_time": 3600,
+                            "last_play_time_date": "2022-01-01T09:00:00",
+                            "total_sessions": 1,
                         }
                     ],
                     "total": 3600,
@@ -63,6 +66,7 @@ class TestPlayTime(AbstractDatabaseTest):
         result = self.playtime_statistics.daily_statistics_for_period(
             now.date(), now.date()
         )
+        self.maxDiff = None
         self.assertEqual(
             [dataclasses.asdict(r) for r in result.data],
             [
@@ -75,6 +79,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda BOTW",
                             },
                             "time": 7200,
+                            "last_play_duration_time": 3600,
+                            "last_play_time_date": "2022-01-01T10:00:00",
+                            "total_sessions": 2,
                         }
                     ],
                     "total": 7200,
@@ -92,6 +99,7 @@ class TestPlayTime(AbstractDatabaseTest):
         result = self.playtime_statistics.daily_statistics_for_period(
             now.date(), next_day.date()
         )
+        self.maxDiff = None
         self.assertEqual(
             [dataclasses.asdict(r) for r in result.data],
             [
@@ -104,6 +112,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda BOTW",
                             },
                             "time": 3600,
+                            "last_play_duration_time": 3600,
+                            "last_play_time_date": "2022-01-01T23:00:00",
+                            "total_sessions": 1,
                         }
                     ],
                     "total": 3600,
@@ -117,6 +128,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda BOTW",
                             },
                             "time": 3600,
+                            "last_play_duration_time": 3600,
+                            "last_play_time_date": "2022-01-02T00:00:00",
+                            "total_sessions": 1,
                         }
                     ],
                     "total": 3600,
@@ -139,6 +153,8 @@ class TestPlayTime(AbstractDatabaseTest):
         result = self.playtime_statistics.daily_statistics_for_period(
             now.date(), now.date()
         )
+        # pylint: disable=C0103
+        self.maxDiff = None
         self.assertEqual(
             [dataclasses.asdict(r) for r in result.data],
             [
@@ -151,6 +167,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda BOTW",
                             },
                             "time": 3600,
+                            "total_sessions": 1,
+                            "last_play_time_date": "2022-01-01T09:00:00",
+                            "last_play_duration_time": 3600,
                         },
                         {
                             "game": {
@@ -158,6 +177,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Doom",
                             },
                             "time": 1800,
+                            "total_sessions": 1,
+                            "last_play_time_date": "2022-01-01T10:00:00",
+                            "last_play_duration_time": 1800,
                         },
                     ],
                     "total": 3600 + 1800,
@@ -217,6 +239,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Doom",
                             },
                             "time": 3600,
+                            "last_play_duration_time": 3600,
+                            "last_play_time_date": "2022-01-02T09:00:00",
+                            "total_sessions": 1,
                         }
                     ],
                     "total": 3600,
@@ -230,6 +255,9 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda Minish Cap",
                             },
                             "time": 1800,
+                            "last_play_duration_time": 1800,
+                            "last_play_time_date": "2022-01-03T09:00:00",
+                            "total_sessions": 1,
                         }
                     ],
                     "total": 1800,
@@ -243,14 +271,33 @@ class TestPlayTime(AbstractDatabaseTest):
                                 "name": "Zelda BOTW",
                             },
                             "time": 1800,
+                            "last_play_duration_time": 1800,
+                            "last_play_time_date": "2022-01-04T09:00:00",
+                            "total_sessions": 1,
                         }
                     ],
                     "total": 1800,
                 },
-                {"date": "2022-01-05", "games": [], "total": 0},
-                {"date": "2022-01-06", "games": [], "total": 0},
-                {"date": "2022-01-07", "games": [], "total": 0},
-                {"date": "2022-01-08", "games": [], "total": 0},
+                {
+                    "date": "2022-01-05",
+                    "games": [],
+                    "total": 0,
+                },
+                {
+                    "date": "2022-01-06",
+                    "games": [],
+                    "total": 0,
+                },
+                {
+                    "date": "2022-01-07",
+                    "games": [],
+                    "total": 0,
+                },
+                {
+                    "date": "2022-01-08",
+                    "games": [],
+                    "total": 0,
+                },
             ],
         )
 
