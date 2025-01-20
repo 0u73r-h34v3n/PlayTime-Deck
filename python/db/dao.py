@@ -46,6 +46,13 @@ class GameSessionsTimeDto:
     migrated: str | None
 
 
+@dataclass
+class OverallGameTimeDto:
+    id: str
+    name: str
+    time: float
+
+
 class Dao:
     def __init__(self, db: SqlLiteDb):
         self._db = db
@@ -178,7 +185,7 @@ class Dao:
                 VALUES (:game_id, :game_name)
                 ON CONFLICT (game_id) DO UPDATE SET name = :game_name
                 WHERE name != :game_name
-                """,
+            """,
             {"game_id": game_id, "game_name": game_name},
         )
 
@@ -198,7 +205,7 @@ class Dao:
             """
                 INSERT INTO play_time(date_time, duration, game_id, migrated)
                 VALUES (?,?,?,?)
-                """,
+            """,
             (start.isoformat(), time_s, game_id, source),
         )
         self._append_overall_time(connection, game_id, time_s)
@@ -344,3 +351,26 @@ class Dao:
             ).fetchone()[0]
             > 0
         )
+
+    def get_game(self, game_id: int) -> OverallGameTimeDto:
+        with self._db.transactional() as connection:
+            return self._get_game(connection, game_id)
+
+    def _get_game(
+        self, connection: sqlite3.Connection, game_id: int
+    ) -> OverallGameTimeDto:
+        return connection.execute(
+            """
+            SELECT
+                gd.game_id,
+                gd.name,
+                ot.duration
+            FROM
+                game_dict gd
+            INNER JOIN overall_time ot
+                ON gd.game_id = ot.game_id
+            WHERE
+                gd.game_id = ?
+            """,
+            (game_id,),
+        ).fetchone()
