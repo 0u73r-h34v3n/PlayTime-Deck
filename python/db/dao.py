@@ -39,6 +39,13 @@ class DailyGameTimeWithLastSessionsDto:
     last_play_duration_time: float
 
 
+@dataclass
+class GameSessionsTimeDto:
+    date: str
+    duration: float
+    migrated: str | None
+
+
 class Dao:
     def __init__(self, db: SqlLiteDb):
         self._db = db
@@ -274,3 +281,66 @@ class Dao:
         ).fetchall()
         return result
 
+    def fetch_per_year_time_report(
+        self,
+        game_id: int,
+        year: int,
+    ) -> List[GameSessionsTimeDto]:
+        with self._db.transactional() as connection:
+            return self._fetch_per_year_time_report(
+                connection,
+                game_id,
+                year,
+            )
+
+    def _fetch_per_year_time_report(
+        self,
+        connection: sqlite3.Connection,
+        game_id: int,
+        year: int,
+    ) -> List[GameSessionsTimeDto]:
+        connection.row_factory = lambda c, row: GameSessionsTimeDto(
+            date=row[0], duration=row[1], migrated=row[2]
+        )
+
+        result = connection.execute(
+            """
+            SELECT
+                date_time,
+                duration,
+                migrated
+            FROM
+                play_time pt
+            WHERE
+                pt.game_id = ?
+            AND
+                strftime('%Y', date_time) = ?
+            """,
+            (game_id, str(year)),
+        ).fetchall()
+
+        return result
+
+    def has_game_any_data_in_year(self, game_id: int, year: int) -> bool:
+        with self._db.transactional() as connection:
+            return self._has_game_any_data_in_year(connection, game_id, year)
+
+    def _has_game_any_data_in_year(
+        self, connection: sqlite3.Connection, game_id: int, year: int
+    ) -> bool:
+        return (
+            connection.execute(
+                """
+                SELECT
+                    COUNT(*) AS total_entries
+                FROM
+                    play_time pt
+                WHERE
+                    game_id = ?
+                AND
+                    strftime('%Y', date_time) = ?
+                """,
+                (game_id, str(year)),
+            ).fetchone()[0]
+            > 0
+        )
