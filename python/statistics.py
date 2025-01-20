@@ -16,7 +16,8 @@ class Statistics:
         end_time = datetime.combine(end, time(23, 59, 59, 999999))
         data = self.dao.fetch_per_day_time_report(start_time, end_time)
 
-        data_as_dict: Dict[str, List[DailyGameTimeDto]] = {}
+        data_as_dict: Dict[str, List[DailyGameTimeWithLastSessionsDto]] = {}
+
         for it in data:
             if it.date in data_as_dict:
                 data_as_dict[it.date].append(it)
@@ -25,19 +26,36 @@ class Statistics:
 
         result: List[DayStatistics] = []
         date_range = self._generate_date_range(start, end)
+
         for day in date_range:
             date_str = format_date(day)
+
             if date_str in data_as_dict:
                 games: List[Game] = []
                 total_time = 0
+
                 for el in data_as_dict[date_str]:
-                    games.append(GameWithTime(Game(el.game_id, el.game_name), el.time))
+                    games.append(
+                        GameWithTime(
+                            Game(el.game_id, el.game_name),
+                            el.time,
+                            el.total_sessions,
+                            el.last_play_time_date,
+                            el.last_play_duration_time,
+                        )
+                    )
                     total_time += el.time
+
                 result.append(
-                    DayStatistics(date=date_str, games=games, total=total_time)
+                    DayStatistics(
+                        date=date_str,
+                        games=games,
+                        total=total_time,
+                    )
                 )
             else:
                 result.append(DayStatistics(date_str, [], 0))
+
         return PagedDayStatistics(
             data=result,
             hasPrev=self.dao.is_there_is_data_before(start_time),
@@ -47,9 +65,16 @@ class Statistics:
     def per_game_overall_statistic(self) -> List[GameWithTime]:
         data = self.dao.fetch_overall_playtime()
         result: List[GameWithTime] = []
+
         for g in data:
             result.append(
-                {"game": {"id": g.game_id, "name": g.game_name}, "time": g.time}
+                {
+                    "game": {"id": g.game_id, "name": g.game_name},
+                    "time": g.time,
+                    "total_sessions": g.total_sessions,
+                    "last_play_time_date": g.last_play_time_date,
+                    "last_play_duration_time": g.last_play_duration_time,
+                }
             )
         return result
 

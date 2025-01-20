@@ -12,6 +12,9 @@ class Game:
 class GameWithTime:
     game: Game
     time: int
+    total_sessions: int
+    last_play_time_date: str
+    last_play_duration_time: float
 
 
 @dataclass
@@ -26,3 +29,5 @@ class PagedDayStatistics:
     data: List[DayStatistics]
     hasPrev: bool
     hasNext: bool
+
+
