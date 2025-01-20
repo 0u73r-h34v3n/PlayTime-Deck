@@ -14,6 +14,12 @@ export interface StatisticForIntervalResponse {
 	hasNext: boolean;
 }
 
+export interface StatisticForYearResponse {
+	data: Array<YearlyStatistics>;
+	hasPrev: boolean;
+	hasNext: boolean;
+}
+
 export class Backend {
 	private eventBus: EventBus;
 
@@ -109,6 +115,30 @@ export class Backend {
 			.catch((error) => {
 				logger.error(error);
 				return false;
+			});
+	}
+
+
+	async fetchGameStatistcsPerYear(
+		gameId: string,
+		year: number,
+	): Promise<StatisticForYearResponse> {
+		return await call<[gameId: string, year: number], StatisticForYearResponse>(
+			"game_statics_per_year",
+			gameId,
+			year,
+		)
+			.then((response) => {
+				return response;
+			})
+			.catch((error) => {
+				logger.error(error);
+
+				return {
+					hasNext: false,
+					hasPrev: false,
+					data: [],
+				};
 			});
 	}
 

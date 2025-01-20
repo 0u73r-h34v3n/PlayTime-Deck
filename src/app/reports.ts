@@ -1,4 +1,11 @@
-import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "../utils";
+import {
+	endOfMonth,
+	endOfWeek,
+	endOfYear,
+	startOfMonth,
+	startOfWeek,
+	startOfYear,
+} from "../utils";
 import type { Backend } from "./backend";
 import type { DailyStatistics, GameWithTime } from "./model";
 
@@ -44,6 +51,7 @@ export function empty<T>() {
 export enum IntervalType {
 	Weekly = 0,
 	Monthly = 1,
+	Yearly = 2,
 }
 
 export class Reports {
@@ -64,6 +72,16 @@ export class Reports {
 		return PerDayPaginatedImpl.create(
 			this.backend,
 			IntervalPagerImpl.create(IntervalType.Monthly, new Date()),
+		);
+	}
+
+	public async yearlyStatistics(
+		gameId: string,
+	): Promise<Paginated<YearlyStatistics>> {
+		return PerYearPaginatedImpl.create(
+			this.backend,
+			IntervalPagerImpl.create(IntervalType.Yearly, new Date()),
+			gameId,
 		);
 	}
 
@@ -133,6 +151,86 @@ class PerDayPaginatedImpl implements Paginated<DailyStatistics> {
 	}
 }
 
+class PerYearPaginatedImpl implements Paginated<YearlyStatistics> {
+	private backend: Backend;
+	private intervalPager: IntervalPager;
+	private data: Array<YearlyStatistics>;
+	private hasPrevPage: boolean;
+	private hasNextPage: boolean;
+	private gameId: number;
+
+	private constructor(
+		backend: Backend,
+		intervalPager: IntervalPager,
+		gameId: number,
+		data: Array<YearlyStatistics>,
+		hasPrevPage: boolean,
+		hasNextPage: boolean,
+	) {
+		this.backend = backend;
+		this.intervalPager = intervalPager;
+		this.data = data;
+		this.hasPrevPage = hasPrevPage;
+		this.hasNextPage = hasNextPage;
+		this.gameId = gameId;
+	}
+
+	hasNext(): boolean {
+		return this.hasNextPage;
+	}
+
+	hasPrev(): boolean {
+		return this.hasPrevPage;
+	}
+
+	static async create(
+		backend: Backend,
+		intervalPager: IntervalPager,
+		gameId: string,
+	): Promise<Paginated<YearlyStatistics>> {
+		const data = await backend.fetchGameStatistcsPerYear(
+			gameId,
+			intervalPager.current().start.getFullYear(),
+		);
+
+		return new PerYearPaginatedImpl(
+			backend,
+			intervalPager,
+			gameId,
+			data.data,
+			data.hasPrev,
+			data.hasNext,
+		);
+	}
+
+	next(): Promise<Paginated<YearlyStatistics>> {
+		const nextIntervalPager = this.intervalPager.next();
+
+		return PerYearPaginatedImpl.create(
+			this.backend,
+			nextIntervalPager,
+			this.gameId,
+		);
+	}
+
+	prev(): Promise<Paginated<YearlyStatistics>> {
+		const prevIntervalPager = this.intervalPager.prev();
+
+		return PerYearPaginatedImpl.create(
+			this.backend,
+			prevIntervalPager,
+			this.gameId,
+		);
+	}
+
+	current(): Page<YearlyStatistics> {
+		return {
+			data: this.data,
+			interval: this.intervalPager.current(),
+		};
+	}
+}
+
 export class IntervalPagerImpl {
 	private type: IntervalType;
 	private interval: Interval;
@@ -146,6 +244,13 @@ export class IntervalPagerImpl {
 		if (type === IntervalType.Weekly) {
 			const start = startOfWeek(date);
 			const end = endOfWeek(start);
+
+			return new IntervalPagerImpl(type, { start, end });
+		}
+
+		if (type === IntervalType.Yearly) {
+			const start = startOfYear(date);
+			const end = endOfYear(start);
 
 			return new IntervalPagerImpl(type, { start, end });
 		}
@@ -167,6 +272,19 @@ export class IntervalPagerImpl {
 			return new IntervalPagerImpl(this.type, { start, end });
 		}
 
+		if (this.type === IntervalType.Yearly) {
+			const nextYear = new Date(
+				new Date(this.interval.start).setFullYear(
+					this.interval.start.getFullYear() + 1,
+				),
+			);
+
+			return new IntervalPagerImpl(this.type, {
+				start: nextYear,
+				end: new Date(),
+			});
+		}
+
 		const start = startOfMonth(nextDate);
 		const end = endOfMonth(start);
 
@@ -182,6 +300,19 @@ export class IntervalPagerImpl {
 			const end = endOfWeek(start);
 
 			return new IntervalPagerImpl(this.type, { start, end });
+		}
+
+		if (this.type === IntervalType.Yearly) {
+			const previousYear = new Date(
+				new Date(this.interval.start).setFullYear(
+					this.interval.start.getFullYear() - 1,
+				),
+			);
+
+			return new IntervalPagerImpl(this.type, {
+				start: previousYear,
+				end: new Date(),
+			});
 		}
 
 		const start = startOfMonth(prevDate);
