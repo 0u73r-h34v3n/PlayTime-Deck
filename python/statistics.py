@@ -1,8 +1,20 @@
 from datetime import datetime, date, time, timedelta
+from os import name
 from typing import Dict, List
-from python.db.dao import DailyGameTimeDto, Dao
-from python.helpers import format_date
-from python.models import DayStatistics, Game, GameWithTime, PagedDayStatistics
+from python.db.dao import DailyGameTimeWithLastSessionsDto, Dao
+from python.helpers import format_date, parse_date_with_hours
+from python.models import (
+    DayStatistics,
+    Game,
+    GameWithTime,
+    OverallGameTimeDto,
+    PagedDayStatistics,
+    PagedYearStatistics,
+    YearlyStatistics,
+)
+import logging
+
+logger = logging.getLogger()
 
 
 class Statistics:
@@ -62,6 +74,57 @@ class Statistics:
             hasNext=self.dao.is_there_is_data_after(end_time),
         )
 
+    def game_statics_per_year(self, game_id: int, year: int) -> PagedYearStatistics:
+        year_time_report = self.dao.fetch_per_year_time_report(game_id, year)
+
+        months_list = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ]
+        stats_by_month: List[YearlyStatistics] = []
+
+        for index, month_name in enumerate(months_list):
+            current_month_index = index + 1
+            statistics_for_month = []
+            total_duration = 0
+            total_sessions = 0
+
+            for statistics in year_time_report:
+                month_of_stat = parse_date_with_hours(statistics.date).month
+
+                if month_of_stat != current_month_index:
+                    continue
+
+                statistics_for_month.append(statistics)
+                total_duration += float(statistics.duration)
+                total_sessions += 1
+
+            stats_by_month.append(
+                {
+                    "month": current_month_index,
+                    "month_name": month_name,
+                    "total": total_duration,
+                    "sessions_count": total_sessions,
+                    "sessions": statistics_for_month,
+                }
+            )
+
+        return PagedYearStatistics(
+            data=stats_by_month,
+            hasNext=self.dao.has_game_any_data_in_year(game_id, year + 1),
+            hasPrev=self.dao.has_game_any_data_in_year(game_id, year - 1),
+        )
+
     def per_game_overall_statistic(self) -> List[GameWithTime]:
         data = self.dao.fetch_overall_playtime()
         result: List[GameWithTime] = []
@@ -78,9 +141,15 @@ class Statistics:
             )
         return result
 
+    def get_game(self, game_id: int) -> OverallGameTimeDto:
+        response = self.dao.get_game(game_id)
+
+        return OverallGameTimeDto(id=response[0], name=response[1], time=response[2])
+
     def _generate_date_range(self, start_date, end_date):
         date_list = []
         curr_date = start_date
+
         while curr_date <= end_date:
             date_list.append(curr_date)
             curr_date += timedelta(days=1)

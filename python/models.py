@@ -31,3 +31,31 @@ class PagedDayStatistics:
     hasNext: bool
 
 
+@dataclass
+class OverallGameTimeDto:
+    id: str
+    name: str
+    time: float
+
+
+@dataclass
+class GameSessionsTime:
+    date: str
+    duration: float
+    migrated: str | None
+
+
+@dataclass
+class YearlyStatistics:
+    month: int
+    month_name: str
+    total: float
+    sessions_count: int
+    sessions: List[GameSessionsTime]
+
+
+@dataclass
+class PagedYearStatistics:
+    data: List[YearlyStatistics]
+    hasPrev: bool
+    hasNext: bool
