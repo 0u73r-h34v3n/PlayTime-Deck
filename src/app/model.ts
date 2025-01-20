@@ -21,6 +21,9 @@ interface Game {
 interface GameWithTime {
 	game: Game;
 	time: number;
+	total_sessions: number;
+	last_play_time_date: string;
+	last_play_duration_time: number;
 }
 
 interface DailyStatistics {

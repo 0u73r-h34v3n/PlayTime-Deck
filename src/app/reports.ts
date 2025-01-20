@@ -88,6 +88,10 @@ export class Reports {
 	public async overallStatistics(): Promise<GameWithTime[]> {
 		return await this.backend.fetchPerGameOverallStatistics();
 	}
+
+	public async getGame(gameId: string): Promise<OverallGameTime> {
+		return await this.backend.getGame(gameId);
+	}
 }
 
 class PerDayPaginatedImpl implements Paginated<DailyStatistics> {
@@ -126,6 +130,7 @@ class PerDayPaginatedImpl implements Paginated<DailyStatistics> {
 			intervalPager.current().start,
 			intervalPager.current().end,
 		);
+
 		return new PerDayPaginatedImpl(
 			backend,
 			intervalPager,
@@ -136,10 +141,13 @@ class PerDayPaginatedImpl implements Paginated<DailyStatistics> {
 
 	next(): Promise<Paginated<DailyStatistics>> {
 		const nextIntervalPager = this.intervalPager.next();
+
 		return PerDayPaginatedImpl.create(this.backend, nextIntervalPager);
 	}
+
 	prev(): Promise<Paginated<DailyStatistics>> {
 		const prevIntervalPager = this.intervalPager.prev();
+
 		return PerDayPaginatedImpl.create(this.backend, prevIntervalPager);
 	}
 

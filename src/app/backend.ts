@@ -118,6 +118,20 @@ export class Backend {
 			});
 	}
 
+	async getGame(gameId: string): Promise<Nullable<OverallGameTime>> {
+		return await call<[gameId: string], Nullable<OverallGameTime>>(
+			"get_game",
+			gameId,
+		)
+			.then((response) => {
+				return response;
+			})
+			.catch((error) => {
+				logger.error(error);
+
+				return null;
+			});
+	}
 
 	async fetchGameStatistcsPerYear(
 		gameId: string,
