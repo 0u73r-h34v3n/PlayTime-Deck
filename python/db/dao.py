@@ -10,10 +10,13 @@ logger = logging.getLogger()
 
 
 @dataclass
-class GameTimeDto:
+class OverallGamesTimeDto:
     game_id: str
     game_name: str
+    last_play_duration_time: float
+    last_play_time_date: str
     time: int
+    total_sessions: int
 
 
 @dataclass
@@ -112,7 +115,7 @@ class Dao:
             {"game_id": game_id, "game_name": game_name},
         )
 
-    def fetch_overall_playtime(self) -> List[GameTimeDto]:
+    def fetch_overall_playtime(self) -> List[OverallGamesTimeDto]:
         with self._db.transactional() as connection:
             return self._fetch_overall_playtime(connection)
 
@@ -149,15 +152,32 @@ class Dao:
     def _fetch_overall_playtime(
         self,
         connection: sqlite3.Connection,
-    ) -> List[GameTimeDto]:
-        connection.row_factory = lambda c, row: GameTimeDto(
-            game_id=row[0], game_name=row[1], time=row[2]
+    ) -> List[OverallGamesTimeDto]:
+        connection.row_factory = lambda c, row: OverallGamesTimeDto(
+            game_id=row[0],
+            game_name=row[1],
+            time=row[2],
+            total_sessions=row[3],
+            last_play_time_date=row[4],
+            last_play_duration_time=row[5],
         )
         return connection.execute(
             """
-                SELECT ot.game_id, gd.name AS game_name, ot.duration
-                FROM overall_time ot
-                        JOIN game_dict gd ON ot.game_id = gd.game_id
+            SELECT
+                ot.game_id,
+                gd.name AS game_name,
+                ot.duration,
+                COUNT(pt.game_id) AS sessions,
+                MAX(pt.date_time) AS last_play_time,
+                MAX(pt.duration) AS last_duration_time
+            FROM
+                overall_time ot
+            JOIN
+                game_dict gd ON ot.game_id = gd.game_id
+            JOIN
+                play_time pt ON ot.game_id = pt.game_id
+            GROUP BY
+                ot.game_id, gd.name, ot.duration
             """
         ).fetchall()
 
