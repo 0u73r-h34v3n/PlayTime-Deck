@@ -19,7 +19,13 @@ export const Pager: React.FC<{
 				<img
 					src={`/steaminputglyphs/sd_${prevKey}.svg`}
 					alt={prevKey}
-					style={{ opacity: hasPrev ? 1 : 0.5 }}
+					style={{
+						opacity: hasPrev ? 1 : 0.5,
+						width: "32px",
+						height: "32px",
+						position: "absolute",
+						left: "2.8vw",
+					}}
 				/>
 			)}
 
@@ -28,6 +34,7 @@ export const Pager: React.FC<{
 					minWidth: "0px",
 					padding: "10px 10px",
 					width: "35px",
+					margin: "0 2.8vw",
 				}}
 				disabled={!hasPrev}
 				onClick={onPrev}
@@ -42,6 +49,7 @@ export const Pager: React.FC<{
 					minWidth: "0px",
 					padding: "10px 10px",
 					width: "35px",
+					margin: "0 2.8vw",
 				}}
 				disabled={!hasNext}
 				onClick={onNext}
@@ -53,7 +61,13 @@ export const Pager: React.FC<{
 				<img
 					src={`/steaminputglyphs/sd_${nextKey}.svg`}
 					alt={nextKey}
-					style={{ opacity: hasNext ? 1 : 0.5 }}
+					style={{
+						opacity: hasNext ? 1 : 0.5,
+						width: "32px",
+						height: "32px",
+						position: "absolute",
+						right: "2.8vw",
+					}}
 				/>
 			)}
 		</Focusable>
