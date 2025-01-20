@@ -5,6 +5,7 @@ import sqlite3
 from typing import List
 
 from python.db.sqlite_db import SqlLiteDb
+from python.helpers import format_date, parse_date, parse_date_with_hours
 
 logger = logging.getLogger()
 
@@ -25,6 +26,17 @@ class DailyGameTimeDto:
     game_id: str
     game_name: str
     time: int
+
+
+@dataclass
+class DailyGameTimeWithLastSessionsDto:
+    date: str
+    game_id: str
+    game_name: str
+    time: int
+    total_sessions: int
+    last_play_time_date: str
+    last_play_duration_time: float
 
 
 class Dao:
@@ -62,9 +74,57 @@ class Dao:
 
     def fetch_per_day_time_report(
         self, begin: type[datetime.datetime], end: type[datetime.datetime]
-    ) -> List[DailyGameTimeDto]:
+    ) -> List[DailyGameTimeWithLastSessionsDto]:
         with self._db.transactional() as connection:
-            return self._fetch_per_day_time_report(connection, begin, end)
+            per_day_time_report = self._fetch_per_day_time_report(
+                connection, begin, end
+            )
+            response: List[DailyGameTimeWithLastSessionsDto] = []
+
+            for it in per_day_time_report:
+                date = format_date(parse_date(it.date.split("T", 1)[0])).split("T", 1)[
+                    0
+                ]
+
+                game = next((x for x in response if x.game_id == it.game_id), None)
+
+                if game:
+                    current_game_date = parse_date_with_hours(game.last_play_time_date)
+                    new_game_date = parse_date_with_hours(it.date)
+
+                    if current_game_date.day != new_game_date.day:
+                        response.append(
+                            DailyGameTimeWithLastSessionsDto(
+                                date,
+                                it.game_id,
+                                it.game_name,
+                                it.time,
+                                1,
+                                it.date,
+                                it.time,
+                            )
+                        )
+                    else:
+                        if current_game_date < new_game_date:
+                            game.last_play_duration_time = it.time
+                            game.last_play_time_date = it.date
+
+                        game.time += it.time
+                        game.total_sessions += 1
+                else:
+                    response.append(
+                        DailyGameTimeWithLastSessionsDto(
+                            date,
+                            it.game_id,
+                            it.game_name,
+                            it.time,
+                            1,
+                            it.date,
+                            it.time,
+                        )
+                    )
+
+            return response
 
     def is_there_is_data_before(self, date: type[datetime.datetime]) -> bool:
         with self._db.transactional() as connection:
@@ -192,21 +252,25 @@ class Dao:
         )
         result = connection.execute(
             """
-                SELECT STRFTIME('%Y-%m-%d', STRFTIME('%s', date_time), 'unixepoch') as date,
-                    pt.game_id as game_id,
-                    gd.name as game_name,
-                    SUM(duration) as total_time,
-                    duration as total_time
-                FROM play_time pt
-                        LEFT JOIN game_dict gd ON pt.game_id = gd.game_id
-                WHERE STRFTIME('%s', date_time) BETWEEN STRFTIME('%s', :begin) AND
-                    STRFTIME('%s', :end)
-                AND migrated IS NULL
-
-                GROUP BY STRFTIME('%Y-%m-%d', STRFTIME('%s', date_time), 'unixepoch'),
-                         pt.game_id,
-                         gd.name
+            SELECT
+                pt.date_time as date,
+                pt.game_id as game_id,
+                gd.name as game_name,
+                pt.duration as duration
+            FROM
+                play_time pt
+            LEFT JOIN
+                game_dict gd
+            ON
+                pt.game_id = gd.game_id
+            WHERE
+                STRFTIME('%s', date_time)
+            BETWEEN
+                STRFTIME('%s', :begin)
+            AND
+                STRFTIME('%s', :end)
             """,
             {"begin": begin.isoformat(), "end": end.isoformat()},
         ).fetchall()
         return result
+
