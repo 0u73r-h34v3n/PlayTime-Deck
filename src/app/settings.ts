@@ -12,6 +12,7 @@ export interface PlayTimeSettings {
 		 */
 		showTimeInHours: boolean;
 	};
+	coverScale: number;
 }
 
 export enum ChartStyle {
@@ -28,6 +29,7 @@ export const DEFAULTS: PlayTimeSettings = {
 		showTimeInHours: true,
 		showSeconds: false,
 	},
+	coverScale: 1,
 };
 
 export class Settings {
@@ -37,6 +39,7 @@ export class Settings {
 				const parsedJson = JSON.parse(json) as PlayTimeSettings;
 
 				this.setDefaultDisplayTimeIfNeeded(parsedJson);
+				this.setDefaultCoverScaleIfNeeded(parsedJson);
 			})
 			.catch((e: Error) => {
 				if (e.message === "Not found") {
@@ -62,6 +65,7 @@ export class Settings {
 
 		data = {
 			...data,
+			coverScale: +data.coverScale,
 			displayTime: {
 				showTimeInHours: !!data.displayTime.showTimeInHours,
 				showSeconds: !!data.displayTime.showSeconds,
@@ -74,6 +78,7 @@ export class Settings {
 	async save(data: PlayTimeSettings) {
 		await SteamClient.Storage.SetObject(PLAY_TIME_SETTINGS_KEY, {
 			...data,
+			coverScale: `${data.coverScale}`,
 			displayTime: {
 				showTimeInHours: +data.displayTime.showTimeInHours,
 				showSeconds: +data.displayTime.showSeconds,
@@ -98,6 +103,26 @@ export class Settings {
 		await SteamClient.Storage.SetObject(PLAY_TIME_SETTINGS_KEY, {
 			...settings,
 			displayTime: DEFAULTS.displayTime,
+		});
+	}
+
+	async setDefaultCoverScaleIfNeeded(settings: PlayTimeSettings) {
+		// NOTE(ynhhoJ): If fore some reason `settings` is `null` or `undefined` we should set it
+		if (isNil(settings)) {
+			SteamClient.Storage.SetObject(PLAY_TIME_SETTINGS_KEY, DEFAULTS);
+
+			return;
+		}
+
+		const { coverScale } = settings;
+
+		if (!isNil(coverScale) || (coverScale >= 0.5 && coverScale <= 2)) {
+			return;
+		}
+
+		await SteamClient.Storage.SetObject(PLAY_TIME_SETTINGS_KEY, {
+			...settings,
+			coverScale: DEFAULTS.coverScale,
 		});
 	}
 }
