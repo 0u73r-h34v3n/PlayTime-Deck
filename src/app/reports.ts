@@ -89,7 +89,7 @@ export class Reports {
 		return await this.backend.fetchPerGameOverallStatistics();
 	}
 
-	public async getGame(gameId: string): Promise<OverallGameTime> {
+	public async getGame(gameId: string): Promise<Nullable<OverallGameTime>> {
 		return await this.backend.getGame(gameId);
 	}
 }
@@ -165,12 +165,12 @@ class PerYearPaginatedImpl implements Paginated<YearlyStatistics> {
 	private data: Array<YearlyStatistics>;
 	private hasPrevPage: boolean;
 	private hasNextPage: boolean;
-	private gameId: number;
+	private gameId: string;
 
 	private constructor(
 		backend: Backend,
 		intervalPager: IntervalPager,
-		gameId: number,
+		gameId: string,
 		data: Array<YearlyStatistics>,
 		hasPrevPage: boolean,
 		hasNextPage: boolean,
