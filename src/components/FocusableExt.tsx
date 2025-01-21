@@ -1,4 +1,5 @@
 import { Focusable } from "@decky/ui";
+import type { CSSProperties } from "react";
 import { focus_panel_no_padding } from "../styles";
 
 interface FocusableExtProperties {
@@ -7,6 +8,7 @@ interface FocusableExtProperties {
 	onActivate?: () => void;
 	onOptionsActionDescription?: JSX.Element;
 	onOptionsButton?: () => void;
+	style?: CSSProperties;
 }
 
 export const FocusableExt: React.FC<FocusableExtProperties> = ({
@@ -15,6 +17,7 @@ export const FocusableExt: React.FC<FocusableExtProperties> = ({
 	onActivate = () => {},
 	onOptionsActionDescription,
 	onOptionsButton,
+	style = {},
 }) => {
 	return (
 		<Focusable
@@ -22,7 +25,7 @@ export const FocusableExt: React.FC<FocusableExtProperties> = ({
 			onActivate={onActivate}
 			onOptionsActionDescription={onOptionsActionDescription}
 			onOptionsButton={onOptionsButton}
-			style={focus_panel_no_padding}
+			style={{ ...focus_panel_no_padding, ...style }}
 		>
 			{children}
 		</Focusable>
