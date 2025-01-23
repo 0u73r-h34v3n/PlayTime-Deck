@@ -113,7 +113,7 @@ class TestPlayTime(AbstractDatabaseTest):
                             },
                             "time": 3600,
                             "last_play_duration_time": 3600,
-                            "last_play_time_date": "2022-01-01T23:00:00",
+                            "last_play_time_date": "2022-01-02T00:00:00",
                             "total_sessions": 1,
                         }
                     ],

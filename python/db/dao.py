@@ -53,6 +53,13 @@ class OverallGameTimeDto:
     time: float
 
 
+@dataclass
+class LastPlaytiomeSessionInformationDto:
+    game_id: str
+    date_time: str
+    duration: float
+
+
 class Dao:
     def __init__(self, db: SqlLiteDb):
         self._db = db
@@ -102,8 +109,12 @@ class Dao:
 
                 game = next((x for x in response if x.game_id == it.game_id), None)
 
+                last_playtime_session_information = (
+                    self.fetch_last_playtime_session_information(it.game_id)
+                )
+
                 if game:
-                    current_game_date = parse_date_with_hours(game.last_play_time_date)
+                    current_game_date = parse_date(game.date)
                     new_game_date = parse_date_with_hours(it.date)
 
                     if current_game_date.day != new_game_date.day:
@@ -114,15 +125,11 @@ class Dao:
                                 it.game_name,
                                 it.time,
                                 1,
-                                it.date,
-                                it.time,
+                                last_playtime_session_information[1],
+                                last_playtime_session_information[2],
                             )
                         )
                     else:
-                        if current_game_date < new_game_date:
-                            game.last_play_duration_time = it.time
-                            game.last_play_time_date = it.date
-
                         game.time += it.time
                         game.total_sessions += 1
                 else:
@@ -133,8 +140,8 @@ class Dao:
                             it.game_name,
                             it.time,
                             1,
-                            it.date,
-                            it.time,
+                            last_playtime_session_information[1],
+                            last_playtime_session_information[2],
                         )
                     )
 
@@ -371,6 +378,32 @@ class Dao:
                 ON gd.game_id = ot.game_id
             WHERE
                 gd.game_id = ?
+            """,
+            (game_id,),
+        ).fetchone()
+
+    def fetch_last_playtime_session_information(
+        self, game_id: int
+    ) -> LastPlaytiomeSessionInformationDto:
+        with self._db.transactional() as connection:
+            return self._fetch_last_playtime_session_information(connection, game_id)
+
+    def _fetch_last_playtime_session_information(
+        self, connection: sqlite3.Connection, game_id: int
+    ) -> LastPlaytiomeSessionInformationDto:
+        return connection.execute(
+            """
+            SELECT
+                pt.game_id,
+                pt.date_time,
+                pt.duration
+            FROM
+                play_time pt
+            WHERE
+                pt.game_id = ?
+            ORDER BY
+                pt.date_time
+            DESC LIMIT 1;
             """,
             (game_id,),
         ).fetchone()
