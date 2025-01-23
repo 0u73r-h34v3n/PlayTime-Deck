@@ -1,6 +1,12 @@
-import { PanelSection } from "@decky/ui";
+import { Menu, MenuItem, PanelSection, showContextMenu } from "@decky/ui";
+import {
+	SortBy,
+	type SortByKeys,
+	type SortByObjectKeys,
+	sortPlayedTime,
+} from "@src/app/sortPlayTime";
 import { registerForInputEvent } from "@src/steam/registerForInputEvent";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatWeekInterval } from "../app/formatters";
 import {
 	type DailyStatistics,
@@ -26,6 +32,20 @@ export const ReportWeekly = ({ slim = false }: ReportWeeklyProperties) => {
 	const [isLoading, setLoading] = useState<boolean>(false);
 	const [currentPage, setCurrentPage] = useState<Paginated<DailyStatistics>>(
 		empty(),
+	);
+
+	const [sortType, setSortType] = useState<SortByKeys>("mostPlayed");
+
+	const sortedData = useMemo(
+		() =>
+			sortPlayedTime(
+				convertDailyStatisticsToGameWithTime(currentPage.current().data),
+				sortType,
+			),
+		[
+			sortType,
+			convertDailyStatisticsToGameWithTime(currentPage.current().data),
+		],
 	);
 
 	useEffect(() => {
@@ -108,6 +128,29 @@ export const ReportWeekly = ({ slim = false }: ReportWeeklyProperties) => {
 			})
 			.reduce((a, b) => a + b, 0) > 0;
 
+	const onOptionsPress = () => {
+		const objectKeys = Object.keys(
+			SortBy,
+		) as unknown as Array<SortByObjectKeys>;
+
+		showContextMenu(
+			<Menu label="Sort titles">
+				{objectKeys.map((key) => {
+					return (
+						<MenuItem
+							key={SortBy[key].key}
+							onSelected={() => {
+								setSortType(() => SortBy[key].key);
+							}}
+						>
+							{SortBy[key].name}
+						</MenuItem>
+					);
+				})}
+			</Menu>,
+		);
+	};
+
 	return (
 		<div>
 			<Pager
@@ -135,7 +178,9 @@ export const ReportWeekly = ({ slim = false }: ReportWeeklyProperties) => {
 					{isAnyGames && (
 						<PanelSection title="By game">
 							<GamesTimeBarView
-								data={convertDailyStatisticsToGameWithTime(data)}
+								data={sortedData}
+								showCovers={!slim}
+								onOptionsPress={onOptionsPress}
 							/>
 
 							{settings.gameChartStyle === ChartStyle.PIE_AND_BARS && (
